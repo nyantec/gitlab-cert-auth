@@ -1,0 +1,10 @@
+{
+  "name": "cert-auth",
+  "version": "1.0.0",
+  "main": "index.js",
+  "bin": "index.js",
+  "license": "proprietary",
+  "dependencies": {
+    "jsonwebtoken": "^8.5.1"
+  }
+}
