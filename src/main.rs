@@ -24,7 +24,7 @@ type Result<T> = std::result::Result<T, CustomError>;
 struct Claims {
 	email: String,
 	name: String,
-	uid: String,
+	username: String,
 	exp: u64,
 	iat: u64,
 }
@@ -33,23 +33,23 @@ fn process_request(req: Request<Body>) -> Result<Response<Body>> {
 	let dn = req.headers().get("x-ssl-client-dn").ok_or(CustomError::MissingHeader{name: "x-ssl-client-dn".to_string()})?.to_str()?;
 	let mut email = "";
 	let mut name = "";
-	let mut uid = "";
+	let mut username = "";
 	for pair in dn.split(',') {
 		let (key, _) = pair.split_at(pair.find('=').ok_or(CustomError::ParseError)?);
 		let (_, val) = pair.split_at(pair.find('=').ok_or(CustomError::ParseError)? + 1);
 		if key == "emailAddress" { email = val; }
 		if key == "CN" { name = val; }
-		if key == "UID" { uid = val; }
+		if key == "UID" { username = val; }
 	}
 	if email == "" { Err(CustomError::MissingField{name: "emailAddress".to_string()})? }
 	if name == "" { Err(CustomError::MissingField{name: "CN".to_string()})? }
-	if uid == "" {
-		uid = name;
+	if username == "" {
+		username = name;
 	}
 
 	let iat = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
 	let exp = iat + 3600;
-	let my_claims = Claims{ email: email.to_string(), name: name.to_string(), uid: uid.to_string(), exp: exp, iat: iat };
+	let my_claims = Claims{ email: email.to_string(), name: name.to_string(), username: username.to_string(), exp: exp, iat: iat };
 	let jwt_secret = env::var("JWT_SECRET").unwrap().to_string();
 	let token = encode(&Header::default(), &my_claims, Key::Hmac(jwt_secret.as_str().as_ref()))?;
 
